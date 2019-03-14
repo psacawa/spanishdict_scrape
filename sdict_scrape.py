@@ -7,8 +7,8 @@ from bs4 import BeautifulSoup
 
 class EspScrape ():
 
-    self.df = pd.DataFrame ()
-    self.eg = pd.DataFrame ()
+    #  self.df = pd.DataFrame ()
+    #  self.eg = pd.DataFrame ()
 
     def __init__ (self, limit = 50000):
         """ Initialize by acquiring word frequencies 
@@ -23,7 +23,7 @@ class EspScrape ():
             print ("Ściągając hiszpańskie słowa z Wikisłownika")
             selt.df = self.get_word_frequencies (limit)
 
-    def get_examples (limit=1000):
+    def get_examples (self, limit=1000):
         """ Pobierz przykładowe hiszpańskie zdania ang/esp z spanishdict.com
 
         Na kazdą stronę spanishdict.com/translate/* jest kilka definicji i dobrych 
@@ -33,16 +33,23 @@ class EspScrape ():
         Listę słow wg. częstotliwość sporządzamy poprzez podrutynę get_word_frequencies
         """
 
-        self.eg = pd.DataFrame (columns = ['ang', 'esp']
+        self.eg = pd.DataFrame (columns = ['ang', 'esp'])
+        if not shasattr (self, 'df'):
+            print ('Brak listę hiszpańskich słów')
+            self.get_word_frequencies ()
+        
+
         # wdróź 
 
-    def get_sub_examples (s):
+
+    def get_page_examples (self, s):
         """ Ściągnij stronę ze spanishdict.com pod wyszukanym hasłem i 
             wydobądź wszystkie przykłady, zwracając ich w postaci dataframe z pandas
         """
 
         url =  'https://www.spanishdict.com/translate/' + s
         r = requests.get (url)
+        
         if r.status_code != 200:
             print ('Błąd przy wczytywaniu witryny')
             return
@@ -52,26 +59,44 @@ class EspScrape ():
 
         col = ['ang', 'esp']
         df =  pd.DataFrame (columns = col)
-        esp_words = set (get_word_frequencies (limit=100).word)
-        print (esp_words) 
+        #  esp_words = set (get_word_frequencies (limit=100).word)
+        #  print (esp_words) 
 
         for l in links:
-            # wdróż ocenę hiszpańskości
-            new_item = p.Series ([l.contents[0].text, l.contents[2].text], index = col)
+            text1, text2 = l.contents[0].text, l.contents[2].text
+            score1 = self.spanishness (text1)
+            score2 = self.spanishness (text2)
+            if score2 < score1:
+                text1,text2 = text2, text1
+            new_item = pd.Series ([text1, text2], index = col)
             df = df.append (new_item, ignore_index = True)
 
         return df
 
-    def spanishness (s):
+    def spanishness (self, s):
         """ Oblicz numeryczną ocenę hiszpańskości zdania.
 
         Korzystamy z listy słow z częstotliwościami.
         """
-        #wdróź
-        pass
+        s = s.lower ()
+        s = re.sub (' +', ' ', s)
+        s = re.sub ('[0-9!?¡¿.,;&%]', '', s)
+        words = s.split (' ')
+        #  print (words)
+        if len (words) == 0:
+            return 0
 
+        score = 0
+        for w in words:
+            subdf = self.df [self.df.word == w]
+            #  print (subdf)
+            if not subdf.empty:
+                print ('Znalezionę słowo {0} z frekwencją {1}'.format (
+                    w, subdf.freq.iloc[0]))
+                score += subdf.freq.iloc[0]
+        return score / len (words)
 
-    def get_word_frequencies (limit=50000):
+    def get_word_frequencies (self, limit=50000):
         """ Pobierz listę słów hiszpańskich względem częstotliwości od M. Buchmeiera
             
         Pewien uzytkownik wiktionary pod adresem
@@ -83,6 +108,9 @@ class EspScrape ():
         Limit określa maksymalną ilość słow by pobrać
         """
 
+        if (hasattr (self,'df')):
+            return self.df
+
         domain  = 'https://en.wiktionary.org'
         url = 'https://en.wiktionary.org/wiki/User:Matthias_Buchmeier'
         r = requests.get (url)
@@ -92,7 +120,7 @@ class EspScrape ():
         soup = BeautifulSoup (r.text, 'html.parser')
         href_regex = re.compile ('Spanish_frequency.*000')
         
-        find_esp_links = lambda t : (t.name == 'a' and t.has_attr ('href')
+        find_esp_links = lambda t : (t.name == 'a' and t.hasattr ('href')
             and href_regex.search (t['href']) is not None)
         tags = soup.find_all (find_esp_links)
         #  print (tags)
@@ -106,12 +134,12 @@ class EspScrape ():
 
             suburl = domain + t['href']
             print ('Wcodząc do {0}'.format (suburl))
-            df = df.append (  pobierz_podliste (suburl), ignore_index=True)
+            df = df.append (get_page_words (suburl), ignore_index=True)
 
         df.to_csv ('esp.dict')
         return df
 
-    def get_page_words (url):
+    def get_page_words (self, url):
         """ Pobierz listę słów hiszpańskich od podstrony profilu na wiktionary
         """
 
