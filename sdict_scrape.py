@@ -1,9 +1,12 @@
 #! /usr/bin/env python3
 
 import os, re
+from time import sleep
 import requests
 import pandas as pd
 from bs4 import BeautifulSoup
+
+# zbagowane, self.freqlist jest przepisane jakoś przez get_examples ()
 
 class EspScrape ():
 
@@ -17,17 +20,17 @@ class EspScrape ():
         """
 
         if 'esp.dict' in os.listdir ():
-            print ("Ładujac hiszpańskie słowa z pliku")
+            print ('Ładujac hiszpańskie słowa z pliku')
             self.freqlist = pd.read_csv ('esp.dict')
         else:
-            print ("Ściągając hiszpańskie słowa z Wikisłownika")
+            print ('Ściągając hiszpańskie słowa z Wikisłownika')
             self.get_word_frequencies (word_limit)
 
         if 'esp_eg.dict' in os.listdir ():
-            print ("Ładując przykłądy z pliku")
+            print ('Ładując przykłądy z pliku')
             self.eg = pd.read_csv ('esp_eg.dict')
         else:
-            print ("Ładujac hiszpańskie słowa z pliku")
+            print ('Ściągajać przykłądy  z spanishdict.com')
             self.get_examples (eg_limit)
 
         
@@ -46,16 +49,20 @@ class EspScrape ():
             print ('Brak listę hiszpańskich słów')
             self.get_word_frequencies ()
         
-        words = self.freqlist.word.iloc [0:limit]
+        words = self.freqlist['word'].iloc [0:limit]
         print (words)
 
-        for w in words:
-            print ('Ściągając przykłądy dla {0}'.format (w))
+        for (n,w) in enumerate(words):
+            print ('Ściągając przykłądy dla #{0}: {1}'.format (n,w))
             self.eg = self.eg.append (self.get_page_examples (w), ignore_index =True)
-
             # mogą być repetycje...
 
-        self.eg.to_csv ('esp_eg.dict')
+            sleep (5)
+            # usypia program przez 5 sek.
+            # bez tego, bo kilkuset pomyślnych próśb http witrynia
+            # odmawia dalszej usługi
+
+        self.eg.to_csv ('esp_eg.dict',index=False)
 
         return self.eg
 
@@ -86,7 +93,6 @@ class EspScrape ():
             new_item = pd.Series ([text1, text2], index = col)
             df = df.append (new_item, ignore_index = True)
 
-        self.freqlist = df
         return df
 
     def spanishness (self, s):
@@ -104,7 +110,7 @@ class EspScrape ():
 
         score = 0
         for w in words:
-            subdf = self.freqlist [self.freqlist.word == w]
+            subdf = self.freqlist [self.freqlist['word'] == w]
             #  print (subdf)
             if not subdf.empty:
                 #  print ('Znalezionę słowo {0} z frekwencją {1}'.format (
@@ -154,6 +160,7 @@ class EspScrape ():
             print ('Wcodząc do {0}'.format (suburl))
             df = df.append (self.get_page_words (suburl), ignore_index=True)
 
+        self.freqlist = df
         df.to_csv ('esp.dict', index=False)
         return df
 
