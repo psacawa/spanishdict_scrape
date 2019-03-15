@@ -31,7 +31,7 @@ class EspScrape ():
             self.get_examples (eg_limit)
 
         
-    def get_examples (self, limit=10):
+    def get_examples (self, limit=1000):
         """ Pobierz przykładowe hiszpańskie zdania ang/esp z spanishdict.com
 
         Na kazdą stronę spanishdict.com/translate/* jest kilka definicji i dobrych 
@@ -40,7 +40,6 @@ class EspScrape ():
         najczestszych hiszpańskich haseł, omijając powtórzone hasła.
         Listę słow wg. częstotliwość sporządzamy poprzez podrutynę get_word_frequencies
         """
-        
 
         self.eg = pd.DataFrame (columns = ['ang', 'esp'])
         if not hasattr (self, 'freqlist'):
@@ -53,6 +52,10 @@ class EspScrape ():
         for w in words:
             print ('Ściągając przykłądy dla {0}'.format (w))
             self.eg = self.eg.append (self.get_page_examples (w), ignore_index =True)
+
+            # mogą być repetycje...
+
+        self.eg.to_csv ('esp_eg.dict')
 
         return self.eg
 
@@ -73,8 +76,6 @@ class EspScrape ():
 
         col = ['ang', 'esp']
         df =  pd.DataFrame (columns = col)
-        #  esp_words = set (get_word_frequencies (limit=100).word)
-        #  print (esp_words) 
 
         for l in links:
             text1, text2 = l.contents[0].text, l.contents[2].text
@@ -85,6 +86,7 @@ class EspScrape ():
             new_item = pd.Series ([text1, text2], index = col)
             df = df.append (new_item, ignore_index = True)
 
+        self.freqlist = df
         return df
 
     def spanishness (self, s):
