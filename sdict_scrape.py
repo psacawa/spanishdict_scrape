@@ -7,10 +7,10 @@ from bs4 import BeautifulSoup
 
 class EspScrape ():
 
-    #  self.df = pd.DataFrame ()
-    #  self.eg = pd.DataFrame ()
+    #  self.freqlist = pd.DataFrame ()
+    #  self.eglist = pd.DataFrame ()
 
-    def __init__ (self, limit = 50000):
+    def __init__ (self, word_limit = 50000, eg_limit = 1000):
         """ Initialize by acquiring word frequencies 
 
         If esp.dict exists, use that, otherwise download.
@@ -18,12 +18,20 @@ class EspScrape ():
 
         if 'esp.dict' in os.listdir ():
             print ("Ładujac hiszpańskie słowa z pliku")
-            self.df = pd.read_csv ('esp.dict')
+            self.freqlist = pd.read_csv ('esp.dict')
         else:
             print ("Ściągając hiszpańskie słowa z Wikisłownika")
-            selt.df = self.get_word_frequencies (limit)
+            self.get_word_frequencies (word_limit)
 
-    def get_examples (self, limit=1000):
+        if 'esp_eg.dict' in os.listdir ():
+            print ("Ładując przykłądy z pliku")
+            self.eg = pd.read_csv ('esp_eg.dict')
+        else:
+            print ("Ładujac hiszpańskie słowa z pliku")
+            self.get_examples (eg_limit)
+
+        
+    def get_examples (self, limit=10):
         """ Pobierz przykładowe hiszpańskie zdania ang/esp z spanishdict.com
 
         Na kazdą stronę spanishdict.com/translate/* jest kilka definicji i dobrych 
@@ -32,15 +40,21 @@ class EspScrape ():
         najczestszych hiszpańskich haseł, omijając powtórzone hasła.
         Listę słow wg. częstotliwość sporządzamy poprzez podrutynę get_word_frequencies
         """
+        
 
         self.eg = pd.DataFrame (columns = ['ang', 'esp'])
-        if not shasattr (self, 'df'):
+        if not hasattr (self, 'freqlist'):
             print ('Brak listę hiszpańskich słów')
             self.get_word_frequencies ()
         
+        words = self.freqlist.word.iloc [0:limit]
+        print (words)
 
-        # wdróź 
+        for w in words:
+            print ('Ściągając przykłądy dla {0}'.format (w))
+            self.eg = self.eg.append (self.get_page_examples (w), ignore_index =True)
 
+        return self.eg
 
     def get_page_examples (self, s):
         """ Ściągnij stronę ze spanishdict.com pod wyszukanym hasłem i 
@@ -88,11 +102,11 @@ class EspScrape ():
 
         score = 0
         for w in words:
-            subdf = self.df [self.df.word == w]
+            subdf = self.freqlist [self.freqlist.word == w]
             #  print (subdf)
             if not subdf.empty:
-                print ('Znalezionę słowo {0} z frekwencją {1}'.format (
-                    w, subdf.freq.iloc[0]))
+                #  print ('Znalezionę słowo {0} z frekwencją {1}'.format (
+                #      w, subdf.freq.iloc[0]))
                 score += subdf.freq.iloc[0]
         return score / len (words)
 
@@ -108,8 +122,8 @@ class EspScrape ():
         Limit określa maksymalną ilość słow by pobrać
         """
 
-        if (hasattr (self,'df')):
-            return self.df
+        if (hasattr (self,'freqlist')):
+            return self.freqlist
 
         domain  = 'https://en.wiktionary.org'
         url = 'https://en.wiktionary.org/wiki/User:Matthias_Buchmeier'
@@ -118,9 +132,11 @@ class EspScrape ():
             print ('Problem z ściąganiem danych')
             return
         soup = BeautifulSoup (r.text, 'html.parser')
-        href_regex = re.compile ('Spanish_frequency.*000')
+
         
-        find_esp_links = lambda t : (t.name == 'a' and t.hasattr ('href')
+        href_regex = re.compile ('Spanish_frequency.*000')
+        find_esp_links = lambda t : (t.name == 'a' 
+                and t.has_attr ('href')
             and href_regex.search (t['href']) is not None)
         tags = soup.find_all (find_esp_links)
         #  print (tags)
@@ -134,9 +150,9 @@ class EspScrape ():
 
             suburl = domain + t['href']
             print ('Wcodząc do {0}'.format (suburl))
-            df = df.append (get_page_words (suburl), ignore_index=True)
+            df = df.append (self.get_page_words (suburl), ignore_index=True)
 
-        df.to_csv ('esp.dict')
+        df.to_csv ('esp.dict', index=False)
         return df
 
     def get_page_words (self, url):
