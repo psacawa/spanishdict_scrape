@@ -1,10 +1,12 @@
 #! /usr/bin/env python3
 
-import os, re
+import os
+import re
 from time import sleep
 import requests
 import pandas as pd
 from bs4 import BeautifulSoup
+import subprocess
 
 # zbagowane, self.freqlist jest przepisane jakoś przez get_examples ()
 
@@ -191,4 +193,29 @@ class EspScrape ():
         df = df.rename ( columns={0: 'word',  1:'freq' })
         df['freq'] = df['freq'].astype (int)
         return df
+
+def wget_pages (lim = 3):
+    """ Pobierz przez wget przez limit stron tłumaczeń z spanishdict
+    """
+
+    base_url = 'https://www.spanishdict.com/translate/'
+    args = ['--no-clobber', '--page-requisites',
+            '--html-extension', '--convert-links',
+            '--no-parent']    
+    esp_dict = open ('./esp.dict', 'r')
+
+
+    # pomiń pierwszy wiersz, bo zawiera tylko nazw kolumn
+    esp_dict.readline ()
+    for c in range (lim):
+
+        word = esp_dict.readline ().split (',')[0]
+        url = base_url + word
+        cmd = ['wget'] + args + [url]
+
+        # ściągamy
+        print ("Pobierając z {}".format (url))
+        subprocess.call (cmd)
+
+
 
