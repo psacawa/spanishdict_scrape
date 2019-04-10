@@ -52,17 +52,30 @@ class EspScrape ():
             self.get_word_frequencies ()
         
         words = self.freqlist['word'].iloc [0:limit]
-        print (words)
+        seen = set ()
 
         for (n,w) in enumerate(words):
-            print ('Ściągając przykłądy dla #{0}: {1}'.format (n,w))
-            self.eg = self.eg.append (self.get_page_examples (w), ignore_index =True)
-            # mogą być repetycje...
 
-            sleep (delay)
-            # usypia program przez 5 sek.
+            # ściągnij przykłady ze strony
+            print ('Ściągając przykłądy dla #{0}: {1}'.format (n,w))
+            ret = self.get_page_examples (w)
+
+            # iteruj przez przykłady ze strony; jeśli którakolwiek będzie powtórzony,
+            # przechodzimy do nastepnego słowa...
+            for c,s in ret.iterrows ():
+                if s.ang not in seen:
+                    seen |= { s.ang }
+                    self.eg = self.eg.append (s,ignore_index=True)
+                else:
+                    print ('Powtórka znalezonia: {}'.format (w))
+                    break
+
+            #  self.eg = self.eg.append (self.get_page_examples (w), ignore_index =True)
+
+            # usypia program przez kilka sek.
             # bez tego, bo kilkuset pomyślnych próśb http witrynia
             # odmawia dalszej usługi
+            sleep (delay)
 
         self.eg.to_csv ('esp_eg.dict',index=False)
 

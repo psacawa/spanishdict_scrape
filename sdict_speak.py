@@ -52,6 +52,7 @@ def say_examples (limit = 2, eng_repetitions= 1, esp_repetitions = 3, delay = 20
             subprocess.call (['espeak', '-v', 'spanish', s.esp])
             sleep (delay)
 
+# można wdrożyć pollowanie klawiatury poprzez select, ale na razie nie wiadomo jak
 def heardEnter():
     i,o,e = select.select([sys.stdin],[],[],0.0001)
     for s in i:
