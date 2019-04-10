@@ -36,7 +36,7 @@ class EspScrape ():
             self.get_examples (eg_limit)
 
         
-    def get_examples (self, limit=1000):
+    def get_examples (self, limit=1000, delay=3):
         """ Pobierz przykładowe hiszpańskie zdania ang/esp z spanishdict.com
 
         Na kazdą stronę spanishdict.com/translate/* jest kilka definicji i dobrych 
@@ -59,7 +59,7 @@ class EspScrape ():
             self.eg = self.eg.append (self.get_page_examples (w), ignore_index =True)
             # mogą być repetycje...
 
-            sleep (5)
+            sleep (delay)
             # usypia program przez 5 sek.
             # bez tego, bo kilkuset pomyślnych próśb http witrynia
             # odmawia dalszej usługi
@@ -194,7 +194,7 @@ class EspScrape ():
         df['freq'] = df['freq'].astype (int)
         return df
 
-def wget_pages (lim = 3):
+def wget_pages (lim = 3, lang_dict = './esp.dict' ):
     """ Pobierz przez wget przez limit stron tłumaczeń z spanishdict
     """
 
@@ -202,14 +202,14 @@ def wget_pages (lim = 3):
     args = ['--no-clobber', '--page-requisites',
             '--html-extension', '--convert-links',
             '--no-parent']    
-    esp_dict = open ('./esp.dict', 'r')
+    dict_file = open (lang_dict, 'r')
 
 
     # pomiń pierwszy wiersz, bo zawiera tylko nazw kolumn
-    esp_dict.readline ()
+    dict_file.readline ()
     for c in range (lim):
 
-        word = esp_dict.readline ().split (',')[0]
+        word = dict_file.readline ().split (',')[0]
         url = base_url + word
         cmd = ['wget'] + args + [url]
 
