@@ -50,6 +50,10 @@ class EspScrape ():
         if not hasattr (self, 'freqlist'):
             print ('Brak listę hiszpańskich słów')
             self.get_word_frequencies ()
+
+        # znajdź miejsce w którym ostałeś
+        #  if hasattr (self, 'eg'):
+
         
         words = self.freqlist['word'].iloc [0:limit]
         seen = set ()
