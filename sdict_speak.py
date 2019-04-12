@@ -48,23 +48,32 @@ def say_examples (limit = 2,  delay = 20,
         print (s.esp)
 
         # zgarnij nazw plików
-        eng_file = '{0}/{1}.mp3'.format (eng_folder, str(c).zfill (6))
-        esp_file = '{0}/{1}.mp3'.format (esp_folder, str(c).zfill (6))
+        eng_file = '{0}/{1}.mp3'.format (eng_folder, str(r).zfill (6))
+        esp_file = '{0}/{1}.mp3'.format (esp_folder, str(r).zfill (6))
         if not os.path.isfile (eng_file):
             print ('{} nie  istnieje'.format (eng_file))
             return 
         if not os.path.isfile (eng_file):
             print ('{} nie  istnieje'.format (eng_file))
             return 
+
+
+        # niestety obecne użycie VLC do odtwarzenie ścieżek dźwiękowych 
+        # jest asychroniczny: odbywa się w nowym procesie
+        # dla wartości delay < ~6, głosy mają tendencje
+        # zlać się ze sobą
+        # wymaga ulepszenia ??
          
         # odtwórz angielskie
         for c in range (eng_repetitions):
-            vlc.play (eng_file)
+            player = vlc.MediaPlayer (eng_file)
+            player.play ()
             sleep (delay)
 
         # odtwórz hiszpańskie
         for c in range (esp_repetitions):
-            vlc.play (eng_file)
+            player = vlc.MediaPlayer (esp_file)
+            player.play ()
             sleep (delay)
 
 def get_polly_voices (limit= 10, eng_voice = 'Joanna', esp_voice = 'Mia'):
@@ -120,7 +129,7 @@ def get_polly_voices (limit= 10, eng_voice = 'Joanna', esp_voice = 'Mia'):
                     '--output-format', 'mp3',
                     '--voice-id', esp_voice,
                     '--text', s.esp,
-                    esp_file
+                    esp_file,
                     '1 > /dev/null' ]
             )
         else:
