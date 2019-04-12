@@ -90,6 +90,11 @@ class EspScrape ():
             limit - limit wpisów do przetwarzania. Kolejność losowa...
             Jeśli nie ma limitu, za przetwórz cały catalog
         """
+
+        # nie działa
+        #  if __file__ not in os.listdir ():
+        #      print ('Proszę urucomić skrypt z głównego katalogu bazy kodu.')
+        #      return
         
         # może odrębna zmienna ??
         self.eg = pd.DataFrame (columns = ['ang', 'esp'])
@@ -97,6 +102,8 @@ class EspScrape ():
         seen = set ()
 
         files = os.listdir ('./www.spanishdict.com/translate')
+        files.sort ()
+         
         if limit == 0:
             limit = len (files)
 
@@ -123,7 +130,7 @@ class EspScrape ():
                     break
 
         # zapisz
-        self.eg.to_csv ('esp_eg.dict', index=False)
+        self.eg.to_csv ('esp_eg.dict' )
         return self.eg
         
 

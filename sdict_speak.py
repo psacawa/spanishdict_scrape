@@ -52,6 +52,59 @@ def say_examples (limit = 2, eng_repetitions= 1, esp_repetitions = 3, delay = 20
             subprocess.call (['espeak', '-v', 'spanish', s.esp])
             sleep (delay)
 
+def get_polly_voices (limit= 10, eng_voice = 'Joanna', esp_voice = 'Mia'):
+    """ Wyślij prósby o pliki do silnika TTS z AWS, Amazon Polly 
+        i zapisz angiel/hispańskie ścieżki dwiękowe w ang/ i esp/
+        limit - limit przykładów
+        eng_voice = angielski głos sztuczny
+        esp_voice = hiszpański głos sztuczny : możliwe 
+             'Lucia' - kastyliański 
+             'Mia' - meksykański
+    """
+
+    if 'esp_eg.dict' not in os.listdir ():
+        print ('Utwórz plik przykładów csv')
+        return
+
+    df = pd.read_csv ('esp_eg.dict')
+
+    # zrób katalogi w których będą się mieściły pliki głosowe
+    # wybór regionu jeśli hiszpańskie
+    eng_folder = '{0}_{1}'.format (eng_voice, 'en-US')
+    esp_folder = '{0}_{1}'.format (esp_voice, 
+        'es-MX' if esp_voice == 'Mia' else 'es-ES'
+    )
+    if not os.path.isdir (eng_folder):
+        os.mkdir (eng_folder)
+    if not os.path.isdir (esp_folder):
+        os.mkdir (esp_folder)
+
+    for c,s in df[:limit].iterrows ():
+
+        eng_file = '{0}/{1}.mp3'.format (eng_folder, str(c).zfill (6))
+        esp_file = '{0}/{1}.mp3'.format (esp_folder, str(c).zfill (6))
+
+        if not os.path.isfile (eng_file):
+            subprocess.call (
+                ['aws', 'polly',  'synthesize-speech',
+                    '--output-format', 'mp3',
+                    '--voice-id', eng_voice,
+                    '--text', s.ang,
+                    eng_file]
+            )
+
+        if not os.path.isfile (esp_file):
+            subprocess.call (
+                ['aws', 'polly',  'synthesize-speech',
+                    '--output-format', 'mp3',
+                    '--voice-id', esp_voice,
+                    '--text', s.esp,
+                    esp_file]
+            )
+
+
+
+
 # można wdrożyć pollowanie klawiatury poprzez select, ale na razie nie wiadomo jak
 def heardEnter():
     i,o,e = select.select([sys.stdin],[],[],0.0001)
