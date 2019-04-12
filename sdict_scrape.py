@@ -62,7 +62,7 @@ class EspScrape ():
 
             # ściągnij przykłady ze strony
             print ('Ściągając przykłądy dla #{0}: {1}'.format (n,w))
-            ret = self.get_page_examples (w)
+            ret = self.get_page_examples (w, mode='online')
 
             # iteruj przez przykłady ze strony; jeśli którakolwiek będzie powtórzony,
             # przechodzimy do nastepnego słowa...
@@ -84,20 +84,73 @@ class EspScrape ():
         self.eg.to_csv ('esp_eg.dict',index=False)
 
         return self.eg
+    
+    def get_local_examples (self, limit = 0):
+        """ Zbuduj dataframe lokalnych przykładów i zapisz rezulujący dataframe
+            limit - limit wpisów do przetwarzania. Kolejność losowa...
+            Jeśli nie ma limitu, za przetwórz cały catalog
+        """
+        
+        # może odrębna zmienna ??
+        self.eg = pd.DataFrame (columns = ['ang', 'esp'])
+        prog = re.compile ('^(.*)\.html$')
+        seen = set ()
 
-    def get_page_examples (self, s):
+        files = os.listdir ('./www.spanishdict.com/translate')
+        if limit == 0:
+            limit = len (files)
+
+        for f in files[:limit]:
+            
+            # wydobądź  wpis on nazwy pliku
+            match = prog.search (f)
+            if not match:
+                print ('Błąd przy parsowaniu pliku {}'.format (f))
+                break
+            entry = match.groups ()[0]
+
+            print ('Ładując przykłądy dla {0}'.format (entry))
+            ret = self.get_page_examples (entry, mode='local')
+
+            # iteruj przez przykłady ze strony; jeśli którakolwiek będzie powtórzony,
+            # przechodzimy do nastepnego słowa...
+            for c,s in ret.iterrows ():
+                if s.ang not in seen:
+                    seen |= { s.ang }
+                    self.eg = self.eg.append (s,ignore_index=True)
+                else:
+                    print ('Powtórka znalezonia: {}'.format (entry))
+                    break
+
+        # zapisz
+        self.eg.to_csv ('esp_eg.dict', index=False)
+        return self.eg
+        
+
+
+    def get_page_examples (self, s, mode = 'online'):
         """ Ściągnij stronę ze spanishdict.com pod wyszukanym hasłem i 
             wydobądź wszystkie przykłady, zwracając ich w postaci dataframe z pandas
+            możliwe wartości mode:  'onine', 'local'
         """
+        if mode == 'online':
+            # ściąganie z sieci
+            url =  'https://www.spanishdict.com/translate/' + s
+            r = requests.get (url)
+            if r.status_code != 200:
+                print ('Błąd przy wczytywaniu witryny')
+                return
+            page_html = r.text
 
-        url =  'https://www.spanishdict.com/translate/' + s
-        r = requests.get (url)
-        
-        if r.status_code != 200:
-            print ('Błąd przy wczytywaniu witryny')
-            return
+        elif mode == 'local':
+            # ładowanie z pliku
+            filename =  'www.spanishdict.com/translate/{}.html'.format (s)
+            page_html = open (filename).read ()
 
-        soup = BeautifulSoup (r.text, 'html.parser')
+        else:
+            print ('Możliwe wartości mode to "online", "local"')
+
+        soup = BeautifulSoup (page_html, 'html.parser')
         links = soup.find_all ('div', class_= 'dictionary-neodict-example')
 
         col = ['ang', 'esp']
