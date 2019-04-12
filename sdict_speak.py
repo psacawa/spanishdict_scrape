@@ -2,13 +2,17 @@
 
 import os
 import sys
+import vlc
 import select
 import subprocess
 import pandas as pd
 import pyttsx3
 from time import sleep
 
-def say_examples (limit = 2, eng_repetitions= 1, esp_repetitions = 3, delay = 20):
+
+def say_examples (limit = 2,  delay = 20,
+        eng_repetitions= 1, esp_repetitions = 3,
+        eng_voice =  'Joanna', esp_voice = 'Mia'):
     """ Wymów najpierw po angielsku, potem po hiszpańsku przykłady z esp_eg.dict
 
     limit - ile przykładów powiedzieć
@@ -23,33 +27,44 @@ def say_examples (limit = 2, eng_repetitions= 1, esp_repetitions = 3, delay = 20
     df = pd.read_csv ('./esp_eg.dict') 
     df = df [0:limit]
 
-    # zincijalizuj silniki TTS
-    eng_engine = pyttsx3.init ()
-    eng_engine.setProperty ('voice', 'english-us')
-    eng_engine.setProperty ('rate', 150)
-
-    esp_engine = pyttsx3.init ()
-    esp_engine.setProperty ('voice', 'english-us') # nie ma hiszpańskiego ???
-    esp_engine.setProperty ('rate', 150)
+    # zrób katalogi w których będą się mieściły pliki głosowe
+    # wybór regionu jeśli hiszpańskie
+    eng_folder = '{0}_{1}'.format (eng_voice, 'en-US')
+    esp_folder = '{0}_{1}'.format (esp_voice, 
+        'es-MX' if esp_voice == 'Mia' else 'es-ES'
+    )
+    if not os.path.isdir (eng_folder):
+        print ('Nie ma plików dzwiękowych dla {}'.format (eng_folder))
+        return 
+    if not os.path.isdir (esp_folder):
+        print ('Nie ma plików dzwiękowych dla {}'.format (esp_folder))
+        return 
 
     # odczytaj przykłady
-    for (c,s) in df.iterrows ():
+    for (r,s) in df.iterrows ():
+        
         print ('=' * 50)
         print (s.ang)
         print (s.esp)
 
-        # na razie polegan na systemowe wywołanie espeak...
-        # naprawić??
+        # zgarnij nazw plików
+        eng_file = '{0}/{1}.mp3'.format (eng_folder, str(c).zfill (6))
+        esp_file = '{0}/{1}.mp3'.format (esp_folder, str(c).zfill (6))
+        if not os.path.isfile (eng_file):
+            print ('{} nie  istnieje'.format (eng_file))
+            return 
+        if not os.path.isfile (eng_file):
+            print ('{} nie  istnieje'.format (eng_file))
+            return 
+         
+        # odtwórz angielskie
         for c in range (eng_repetitions):
-            #  eng_engine.say (s.ang)
-            #  eng_engine.runAndWait ()
-            subprocess.call (['espeak', '-v', 'english-us', s.ang])
+            vlc.play (eng_file)
             sleep (delay)
 
+        # odtwórz hiszpańskie
         for c in range (esp_repetitions):
-            #  esp_engine.say (s.esp)
-            #  esp_engine.runAndWait ()
-            subprocess.call (['espeak', '-v', 'spanish', s.esp])
+            vlc.play (eng_file)
             sleep (delay)
 
 def get_polly_voices (limit= 10, eng_voice = 'Joanna', esp_voice = 'Mia'):
@@ -85,24 +100,76 @@ def get_polly_voices (limit= 10, eng_voice = 'Joanna', esp_voice = 'Mia'):
         esp_file = '{0}/{1}.mp3'.format (esp_folder, str(c).zfill (6))
 
         if not os.path.isfile (eng_file):
+            print ('Ściągając mowęd do {}'.format( eng_file))
             subprocess.call (
                 ['aws', 'polly',  'synthesize-speech',
                     '--output-format', 'mp3',
                     '--voice-id', eng_voice,
                     '--text', s.ang,
-                    eng_file]
+                    eng_file,
+                    '1 > /dev/null' ]
+
             )
+        else:
+            print ('{} już istnieje'.format (eng_file))
 
         if not os.path.isfile (esp_file):
+            print ('Ściągając mowęd do {}'.format( esp_file))
             subprocess.call (
                 ['aws', 'polly',  'synthesize-speech',
                     '--output-format', 'mp3',
                     '--voice-id', esp_voice,
                     '--text', s.esp,
-                    esp_file]
+                    esp_file
+                    '1 > /dev/null' ]
             )
+        else:
+            print ('{} już istnieje'.format (esp_file))
 
 
+def say_examples_pyttsx3 (limit = 2, eng_repetitions= 1, esp_repetitions = 3, delay = 20):
+    """ Wymów najpierw po angielsku, potem po hiszpańsku przykłady z esp_eg.dict
+
+    limit - ile przykładów powiedzieć
+    eng/esp_repetitions - ile razy powtarzać angielskie/hiszpańskie
+    delay pausa między zdań
+    """
+
+    # załaduj przykłady
+    if 'esp_eg.dict' not in os.listdir ():
+        print ('Nie ma przykładów')
+        return
+    df = pd.read_csv ('./esp_eg.dict') 
+    df = df [0:limit]
+
+    # zincijalizuj silniki TTS
+    eng_engine = pyttsx3.init ()
+    eng_engine.setProperty ('voice', 'english-us')
+    eng_engine.setProperty ('rate', 150)
+
+    esp_engine = pyttsx3.init ()
+    esp_engine.setProperty ('voice', 'english-us') # nie ma hiszpańskiego ???
+    esp_engine.setProperty ('rate', 150)
+
+    # odczytaj przykłady
+    for (r,s) in df.iterrows ():
+        print ('=' * 50)
+        print (s.ang)
+        print (s.esp)
+
+        # na razie polegan na systemowe wywołanie espeak...
+        # naprawić??
+        for c in range (eng_repetitions):
+            #  eng_engine.say (s.ang)
+            #  eng_engine.runAndWait ()
+            subprocess.call (['espeak', '-v', 'english-us', s.ang])
+            sleep (delay)
+
+        for c in range (esp_repetitions):
+            #  esp_engine.say (s.esp)
+            #  esp_engine.runAndWait ()
+            subprocess.call (['espeak', '-v', 'spanish', s.esp])
+            sleep (delay)
 
 
 # można wdrożyć pollowanie klawiatury poprzez select, ale na razie nie wiadomo jak
