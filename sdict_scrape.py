@@ -106,7 +106,7 @@ class EspScrape ():
             match = prog.search (f)
             if not match:
                 print ('Błąd przy parsowaniu pliku {}'.format (f))
-                break
+                continue
             entry = match.groups ()[0]
 
             print ('Ładując przykłądy dla {0}'.format (entry))
