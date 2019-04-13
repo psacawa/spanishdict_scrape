@@ -119,35 +119,35 @@ def get_polly_voices (start = 0, limit= 1,
         esp_file = '{0}/{1}.mp3'.format (esp_folder, str(c).zfill (6))
 
         if not os.path.isfile (eng_file):
-            print ('Ściągając mowęd do {}'.format( eng_file))
-            print(['aws', 'polly',  'synthesize-speech',
-                    '--output-format', 'mp3',
-                    '--voice-id', eng_voice,
-                    '--text', s.ang,
-                    eng_file,
-                    '1 > /dev/null' ])
-            subprocess.call (
+
+            print ('Ściągając mowę do {}'.format( eng_file))
+            subprocess.run (
                 ['aws', 'polly',  'synthesize-speech',
                     '--output-format', 'mp3',
                     '--voice-id', eng_voice,
                     '--text', s.ang,
-                    eng_file,
-                    '1 > /dev/null' ]
+                    eng_file, ]
+                    #  '1>/dev/null' ]
+                    # powoduje jakoś nagle błędy...
 
             )
+
         else:
             print ('{} już istnieje'.format (eng_file))
 
         if not os.path.isfile (esp_file):
-            print ('Ściągając mowęd do {}'.format( esp_file))
-            subprocess.call (
+
+            print ('Ściągając mowę do {}'.format( esp_file))
+            subprocess.run (
                 ['aws', 'polly',  'synthesize-speech',
                     '--output-format', 'mp3',
                     '--voice-id', esp_voice,
                     '--text', s.esp,
-                    esp_file,
-                    '1 > /dev/null' ]
+                    esp_file,]
+                    #  '1>/dev/null' ]
+                    # tu też
             )
+
         else:
             print ('{} już istnieje'.format (esp_file))
 
