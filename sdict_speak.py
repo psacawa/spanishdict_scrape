@@ -76,9 +76,11 @@ def say_examples (limit = 2,  delay = 20,
             player.play ()
             sleep (delay)
 
-def get_polly_voices (limit= 10, eng_voice = 'Joanna', esp_voice = 'Mia'):
+def get_polly_voices (start = 0, limit= 1, 
+            eng_voice = 'Joanna', esp_voice = 'Mia'):
     """ Wyślij prósby o pliki do silnika TTS z AWS, Amazon Polly 
         i zapisz angiel/hispańskie ścieżki dwiękowe w ang/ i esp/
+        start - od którego wpisu rozpocząć
         limit - limit przykładów
         eng_voice = angielski głos sztuczny
         esp_voice = hiszpański głos sztuczny : możliwe 
@@ -87,10 +89,16 @@ def get_polly_voices (limit= 10, eng_voice = 'Joanna', esp_voice = 'Mia'):
     """
 
     if 'esp_eg.dict' not in os.listdir ():
-        print ('Utwórz plik przykładów csv')
+        print ('Utwórz plik przykładów .csv')
         return
+    
+
 
     df = pd.read_csv ('esp_eg.dict')
+
+    if start >= df.shape[0]:
+        print ("Baza danych nie ma tak wiele wpisów")
+        return 
 
     # zrób katalogi w których będą się mieściły pliki głosowe
     # wybór regionu jeśli hiszpańskie
@@ -103,13 +111,21 @@ def get_polly_voices (limit= 10, eng_voice = 'Joanna', esp_voice = 'Mia'):
     if not os.path.isdir (esp_folder):
         os.mkdir (esp_folder)
 
-    for c,s in df[:limit].iterrows ():
+
+    # wywołanie aws polly zbagowane??
+    for c,s in df[start:start+limit].iterrows ():
 
         eng_file = '{0}/{1}.mp3'.format (eng_folder, str(c).zfill (6))
         esp_file = '{0}/{1}.mp3'.format (esp_folder, str(c).zfill (6))
 
         if not os.path.isfile (eng_file):
             print ('Ściągając mowęd do {}'.format( eng_file))
+            print(['aws', 'polly',  'synthesize-speech',
+                    '--output-format', 'mp3',
+                    '--voice-id', eng_voice,
+                    '--text', s.ang,
+                    eng_file,
+                    '1 > /dev/null' ])
             subprocess.call (
                 ['aws', 'polly',  'synthesize-speech',
                     '--output-format', 'mp3',
