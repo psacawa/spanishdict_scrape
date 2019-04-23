@@ -10,9 +10,12 @@ import pyttsx3
 from time import sleep
 
 
-def say_examples (limit = 2,  delay = 20,
+def say_examples (
+        start = 0, limit = 2,
+        delay = 20,
         eng_repetitions= 1, esp_repetitions = 3,
-        eng_voice =  'Joanna', esp_voice = 'Mia'):
+        eng_voice =  'Joanna', esp_voice = 'Mia'
+    ):
     """ Wymów najpierw po angielsku, potem po hiszpańsku przykłady z esp_eg.dict
 
     limit - ile przykładów powiedzieć
@@ -76,8 +79,10 @@ def say_examples (limit = 2,  delay = 20,
             player.play ()
             sleep (delay)
 
-def get_polly_voices (start = 0, limit= 1, 
-            eng_voice = 'Joanna', esp_voice = 'Mia'):
+def get_polly_voices (
+        start = 0, limit= 1, 
+        eng_voice = 'Joanna', esp_voice = 'Mia'
+    ):
     """ Wyślij prósby o pliki do silnika TTS z AWS, Amazon Polly 
         i zapisz angiel/hispańskie ścieżki dwiękowe w ang/ i esp/
         start - od którego wpisu rozpocząć
