@@ -3,12 +3,16 @@ Bardzo proste skrypty służace aby zescrapować rożne dane ze `spanishdict.com
 ## Ogóny Zarys Probabilistycznego Modelu
 
 To będzie polegać na tym, że empirycznie oblicznymy empiryczne prawdopodobieństwo/częstotliwość każdego słowa z `esp.dict` w korpusie przykładów (lub przymiemy liczby zapisany w źródle).  
-Wtedy każdemu przykładowi przypisujemy przypisujemy empiryczne prawdopodobieństwo pojawienie się zdania na podstawie prostego Markowskiego modelu tworzenia zdań. Stała kontynuowania zdania gamma będzie umowna.  
-Znormalizujemy wynikające liczby o prawdopodobieństwo że losowe zdanie jest w korpusie przykładów. Innymi słowy, dzielimy przez sumę prawdopodobieństw wszystkich zdań.  
-Próbkujemy powstającą dystrybucję, tworząc porządek na korpusie która faworyzuje najbardziej naturalne przykłady (pod względem częstotliwości występowania występujących w nich słów)  
-Pobieramy głosy Joanny i Mia z AWS Polly.  
-Z uporządkowanego zestawu ang/esp/głosy robimy talię Anki..  
 
+Wtedy każdemu przykładowi przypisujemy przypisujemy empiryczne prawdopodobieństwo pojawienie się zdania na podstawie prostego Markowskiego modelu tworzenia zdań. Stała kontynuowania zdania gamma będzie umowna.  
+
+Znormalizujemy wynikające liczby o prawdopodobieństwo że losowe zdanie jest w korpusie przykładów. Innymi słowy, dzielimy przez sumę prawdopodobieństw wszystkich zdań.  
+
+Próbkujemy powstającą dystrybucję, tworząc porządek na korpusie która faworyzuje najbardziej naturalne przykłady (pod względem częstotliwości występowania występujących w nich słów)  
+
+Pobieramy głosy Joanny i Mia z AWS Polly.  
+
+Z uporządkowanego zestawu ang/esp/głosy robimy talię Anki..  
 
 ## Możliwe Ulepszenia - Problemy
 
