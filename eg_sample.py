@@ -11,7 +11,6 @@ class EmpiricalLanguageModel:
 
         self.exampleFile = exampleFile
         self.getWordProbabilities (self.exampleFile)
-        self.getWordProbabilities ()
 
         #  współczynnik hamowania zdania
         self.gamma = 0.1
@@ -20,21 +19,24 @@ class EmpiricalLanguageModel:
         """ Zwróć dataframe ze słowami """
         return self.wordsFrame
 
-    def stripSentence (self, s):
-        """ Normalizuj zdanie, robiąc z niego listę pojawiających się w nim słów """
-        tr = str.maketrans ('', '', '?¿!¡.,:;\"\'')
-        return s.translate (tr) .lower () .strip () .split ()
-
     def getSentencePrbability (self, sentence):
         """ Zwróć prawdopodobieństwo losowego występowania zdanie s
         """
 
         words = stripSentence (sentence)
+
         wordsProb = map (lambda s : self.wordsDict [s], words)
         
         returnValue = 1.0
         for p in wordsProb:
             returnValue *= p
+
+        # jedno czynnik 1-\gamma  dla każdego słowa
+        returnValue *= (1.0 - self.gamma) ** len (words) 
+
+        # i jedno \gamma na zakończenie
+        returnValue *= self.gamma
+
 
         return returnValue
         
@@ -51,7 +53,7 @@ class EmpiricalLanguageModel:
         self.wordsDict = dict ()
 
         for s in egdf.iterrows ():
-            l = self.stripSentence (s[1]['esp'])
+            l = stripSentence (s[1]['esp'])
             total_words += len (l)
             for w in l:
                 if w in self.wordsDict.keys():
@@ -62,10 +64,11 @@ class EmpiricalLanguageModel:
 
         for k in self.wordsDict.keys ():
             self.wordsDict[k] = self.wordsDict [k] / total_words
-        self.wordsDict = list (self.wordsDict.items ())
-        self.wordsDict.sort (key = lambda p : p [1], reverse = True)
 
-        self.wordsFrame = pd.DataFrame (self.wordsDict,
+        words = list (self.wordsDict.items ())
+        words.sort (key = lambda p : p [1], reverse = True)
+
+        self.wordsFrame = pd.DataFrame (words,
             columns = ['word', 'prob']
             )
 
@@ -82,6 +85,10 @@ class EmpiricalLanguageModel:
 
         # skończ
 
+def stripSentence (s):
+    """ Normalizuj zdanie, robiąc z niego listę pojawiających się w nim słów """
+    tr = str.maketrans ('', '', '?¿!¡.,:;\"\'')
+    return s.translate (tr) .lower () .strip () .split ()
 
 
 def main ():
