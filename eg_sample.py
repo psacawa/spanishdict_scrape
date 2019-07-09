@@ -1,7 +1,8 @@
 #! /usr/bin/python3
 
 import pandas as pd
-from math import log
+from math import log, exp
+
 
 class EmpiricalLanguageModel:
 
@@ -28,8 +29,15 @@ class EmpiricalLanguageModel:
         """ Zwróć prawdopodobieństwo losowego występowania zdanie s
         """
 
-        sentence = 
+        words = stripSentence (sentence)
+        wordsProb = map (lambda s : self.wordsDict [s], words)
+        
+        returnValue = 1.0
+        for p in wordsProb:
+            returnValue *= p
 
+        return returnValue
+        
 
     def getWordProbabilities (self, exampleFile = './esp_eg.dict'):
         """ Bierz przykłądy. Oblicz empiryczne prawdopodobienstwa. 
