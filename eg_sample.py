@@ -9,15 +9,28 @@ class EmpiricalLanguageModel:
     def __init__ (self, exampleFile='./esp_eg.dict'):
         """ Incijalizuj to bydło """
 
-        self.exampleFile = exampleFile
-        self.getWordProbabilities (self.exampleFile)
-
         #  współczynnik hamowania zdania
         self.gamma = 0.1
 
-    def wordsFrame (self):
+        # górny limit na liczbie przykładów które pozwalamy wejść do układu
+        #  self.truncateExamples = (exampleLimit > 0)
+        #  self.exampleLimit = exampleLimit
+
+        self.exampleFile = exampleFile
+        self.getWordProbabilities ()
+
+
+    def getWordsFrame (self):
         """ Zwróć dataframe ze słowami """
         return self.wordsFrame
+
+    def getWordsDict (self):
+        """ Zwróć słownik ze słowami """
+        return self.wordsDict
+
+    def getExamplesFrame (self):
+        """ Zwróć  dataframe z przykładami """
+        return self.examplesFrame
 
     def getSentencePrbability (self, sentence):
         """ Zwróć prawdopodobieństwo losowego występowania zdanie s
@@ -25,7 +38,11 @@ class EmpiricalLanguageModel:
 
         words = stripSentence (sentence)
 
-        wordsProb = map (lambda s : self.wordsDict [s], words)
+        try:
+            wordsProb = map (lambda s : self.wordsDict [s], words)
+        except Exception as e:
+            print (e)
+            return
         
         returnValue = 1.0
         for p in wordsProb:
@@ -41,13 +58,15 @@ class EmpiricalLanguageModel:
         return returnValue
         
 
-    def getWordProbabilities (self, exampleFile = './esp_eg.dict'):
+    def getWordProbabilities (self):
         """ Bierz przykłądy. Oblicz empiryczne prawdopodobienstwa. 
         Zwróć rezultat w postaci listy. 
         """
 
-        egdf = pd.read_csv (exampleFile)
-        egdf = egdf.iloc [:10]
+        egdf = pd.read_csv (self.exampleFile)
+
+        #  if self.truncateExamples:
+        #      egdf = egdf.iloc [:self.exampleLimit]
         
         total_words = 0
         self.wordsDict = dict ()
@@ -74,25 +93,23 @@ class EmpiricalLanguageModel:
 
         return self.wordsFrame
 
-    def getExampleProbabilities (self, exampleFile = './esp_eg.dict'):
+    def getExampleProbabilities (self):
         """ Przypisz każdemu przykładowi prawdopodobieństwo """
         
-        self.examplesData = pd.read_csv (self.exampleFile)
+        self.examplesFrame = pd.read_csv (self.exampleFile)
 
-        self.examplesData['prob'] = self.examplesData['ang'].apply (
+        #  if self.truncateExamples:
+        #      self.examplesFrame = self.examplesFrame [:self.exampleLimit]
+
+        self.examplesFrame ['prob'] = self.examplesFrame['esp'].apply (
                 self.getSentencePrbability
             )
 
-        # skończ
+        return self.examplesFrame
+
 
 def stripSentence (s):
     """ Normalizuj zdanie, robiąc z niego listę pojawiających się w nim słów """
     tr = str.maketrans ('', '', '?¿!¡.,:;\"\'')
     return s.translate (tr) .lower () .strip () .split ()
 
-
-def main ():
-    lang = EmpiricalLanguageModel ()
-
-if __name__ == '__main__':
-    main ()
