@@ -1,6 +1,6 @@
 Bardzo proste skrypty służace aby zescrapować rożne dane ze `spanishdict.com` i trochę z Wikisłownika.
 
-## Ogóny Zarys Modelu Probabilistycznego 
+## Ogólny Zarys Modelu Probabilistycznego 
 
 To będzie polegać na tym, że empirycznie oblicznymy empiryczne prawdopodobieństwo/częstotliwość każdego słowa z `esp.dict` w korpusie przykładów (lub przymiemy liczby zapisany w źródle).  
 

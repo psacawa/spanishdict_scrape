@@ -17,7 +17,8 @@ class EmpiricalLanguageModel:
         #  self.exampleLimit = exampleLimit
 
         self.exampleFile = exampleFile
-        self.getWordProbabilities ()
+        self.calculateWordProbabilities ()
+        self.calculateExampleProbabilities ()
 
 
     def getWordsFrame (self):
@@ -58,7 +59,7 @@ class EmpiricalLanguageModel:
         return returnValue
         
 
-    def getWordProbabilities (self):
+    def calculateWordProbabilities (self):
         """ Bierz przykłądy. Oblicz empiryczne prawdopodobienstwa. 
         Zwróć rezultat w postaci listy. 
         """
@@ -93,7 +94,7 @@ class EmpiricalLanguageModel:
 
         return self.wordsFrame
 
-    def getExampleProbabilities (self):
+    def calculateExampleProbabilities (self):
         """ Przypisz każdemu przykładowi prawdopodobieństwo """
         
         self.examplesFrame = pd.read_csv (self.exampleFile)
@@ -105,7 +106,22 @@ class EmpiricalLanguageModel:
                 self.getSentencePrbability
             )
 
+        self.examplesFrame ['prob'] /= self.examplesFrame['prob'].sum ()
+
         return self.examplesFrame
+
+    def sampleWord (self):
+        """ Losuj słowo """ 
+
+        #  wdróż
+        pass
+    
+    def sampleSentence (self):
+        """ Losuj słowo z korpusa z obliczonymi prawdopodobieństwami
+        """
+
+        #  wdróż
+        pass
 
 
 def stripSentence (s):
