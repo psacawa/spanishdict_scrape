@@ -37,7 +37,7 @@ class EspScrape ():
 
         
     def get_examples (self, limit=1000, delay=3):
-        """ Pobierz przykładowe hiszpańskie zdania ang/esp z spanishdict.com
+        """ Pobierz przykładowe hiszpańskie zdania english/esp z spanishdict.com
 
         Na kazdą stronę spanishdict.com/translate/* jest kilka definicji i dobrych 
         przykładów użycia. Pobiermy hiszpański wyraz wraz z angielskim przełożeniem
@@ -46,7 +46,7 @@ class EspScrape ():
         Listę słow wg. częstotliwość sporządzamy poprzez podrutynę get_word_frequencies
         """
 
-        self.eg = pd.DataFrame (columns = ['ang', 'esp'])
+        self.eg = pd.DataFrame (columns = ['english', 'spanish'])
         if not hasattr (self, 'freqlist'):
             print ('Brak listę hiszpańskich słów')
             self.get_word_frequencies ()
@@ -67,8 +67,8 @@ class EspScrape ():
             # iteruj przez przykłady ze strony; jeśli którakolwiek będzie powtórzony,
             # przechodzimy do nastepnego słowa...
             for c,s in ret.iterrows ():
-                if s.ang not in seen:
-                    seen |= { s.ang }
+                if s.english not in seen:
+                    seen |= { s.english }
                     self.eg = self.eg.append (s,ignore_index=True)
                 else:
                     print ('Powtórka znalezonia: {}'.format (w))
@@ -97,7 +97,7 @@ class EspScrape ():
         #      return
         
         # może odrębna zmienna ??
-        self.eg = pd.DataFrame (columns = ['ang', 'esp'])
+        self.eg = pd.DataFrame (columns = ['english', 'spanish'])
         prog = re.compile ('^(.*)\.html$')
         seen = set ()
 
@@ -122,8 +122,8 @@ class EspScrape ():
             # iteruj przez przykłady ze strony; jeśli którakolwiek będzie powtórzony,
             # przechodzimy do nastepnego słowa...
             for c,s in ret.iterrows ():
-                if s.ang not in seen:
-                    seen |= { s.ang }
+                if s.english not in seen:
+                    seen |= { s.english }
                     self.eg = self.eg.append (s,ignore_index=True)
                 else:
                     print ('Powtórka znalezonia: {}'.format (entry))
@@ -160,7 +160,7 @@ class EspScrape ():
         soup = BeautifulSoup (page_html, 'html.parser')
         links = soup.find_all ('div', class_= 'dictionary-neodict-example')
 
-        col = ['ang', 'esp']
+        col = ['english', 'spanish']
         df =  pd.DataFrame (columns = col)
 
         for l in links:
